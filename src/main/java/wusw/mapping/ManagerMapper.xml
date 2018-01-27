@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="wusw.dao.ManagerMapper">
+
+	<resultMap type="wusw.entity.JobOffers" id="offersResultMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="job_require" property="require" jdbcType="VARCHAR"/>
+		<result column="job" property="job" jdbcType="VARCHAR"/>
+		<result column="name" property="compantName" jdbcType="VARCHAR"/>
+	</resultMap>
+	<resultMap type="wusw.entity.student.SendJobResultParam" id="sendJobResultMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="job_require" property="require" jdbcType="VARCHAR"/>
+		<result column="job" property="job" jdbcType="VARCHAR"/>
+		<result column="name" property="compantName" jdbcType="VARCHAR"/>
+		<result column="job_type" property="jobType" jdbcType="VARCHAR"/>
+		<result column="work_address" property="workAddress" jdbcType="VARCHAR"/>
+		<result column="student_id" property="studentId" jdbcType="INTEGER"/>
+		<result column="state" property="state" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<select id="selectJobOffers" resultMap="offersResultMap">
+		select a.id,a.job_require,a.job,c.name
+		from joboffers a join company c
+		on a.compant_id=c.id
+		where a.state=1
+	</select>
+	
+	<insert id="insertJobOffers" parameterType="wusw.entity.JobOffers">
+		insert into joboffers(job_require,job,work_address,compant_id,job_type,state)
+		values
+		(#{require,jdbcType=VARCHAR},#{job,jdbcType=VARCHAR},#{workAddress,jdbcType=VARCHAR},#{compantId,jdbcType=INTEGER},
+		 #{jobType,jdbcType=VARCHAR},#{state,jdbcType=INTEGER})
+	</insert>
+	 
+	<update id="updateJobOffers" parameterType="wusw.entity.processJobOffer">
+		update student_to_joboffers
+		set state=#{state,jdbcType=VARCHAR}
+		where student_id=#{studentId,jdbcType=INTEGER} and joboffers_id=#{joboffersId,jdbcType=INTEGER}
+	</update>
+	
+	<select id="selectSendJob" resultMap="sendJobResultMap" parameterType="wusw.entity.student.SendJobQueryParam">
+			select a.id,a.job_require,a.job,a.job_type,a.work_address,c.name,d.state,d.student_id
+	        from joboffers a join company c on a.compant_id=c.id
+	        join student_to_joboffers d     on d.joboffers_id=a.id
+			<include refid="whereSqlForSendJob"/>
+			limit #{page.startPage,jdbcType=INTEGER},#{page.pageSize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectSendJobTotal" resultType="int" parameterType="wusw.entity.student.SendJobQueryParam">
+			select count(a.id)
+	        from joboffers a join company c on a.compant_id=c.id
+	        join student_to_joboffers d     on d.joboffers_id=a.id
+			<include refid="whereSqlForSendJob"/>
+	</select>
+	
+	<sql id="whereSqlForSendJob">
+		<where>
+		<if test="jobType !=null and jobType !='' ">
+			and a.job_type LIKE concat('%',#{jobType},'%')
+		</if>
+		<if test="workAddress !=null and workAddress !='' ">
+			and a.work_address LIKE concat('%',#{workAddress},'%')
+		</if>
+		<if test="job !=null and job !='' ">
+			and a.job LIKE concat('%',#{job},'%')
+		</if>
+		<if test="compantName !=null and compantName !='' ">
+			and c.name LIKE concat('%',#{compantName},'%')
+		</if>
+		<if test="state !=null and state !='' ">
+			and d.state = #{state,jdbcType=VARCHAR}
+		</if>
+		</where>
+	</sql>
+	
+	<update id="deleteJoboffers" parameterType="int">
+		update joboffers
+		set state=0
+		where id=#{id,jdbcType=INTEGER}
+	</update>
+	
+	<select id="selectCompany" >
+		
+	</select>
+</mapper>

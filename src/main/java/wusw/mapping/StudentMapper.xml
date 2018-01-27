@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="wusw.dao.StudentMapper">
+
+	<resultMap type="wusw.entity.JobOffers" id="offersResultMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="job_require" property="require" jdbcType="VARCHAR"/>
+		<result column="job" property="job" jdbcType="VARCHAR"/>
+		<result column="name" property="compantName" jdbcType="VARCHAR"/>
+		<result column="job_type" property="jobType" jdbcType="VARCHAR"/>
+		<result column="work_address" property="workAddress" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="wusw.entity.student.CompanyResultParam" id="companyResultMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="name" property="name" jdbcType="VARCHAR"/>
+		<result column="introduce" property="introduce" jdbcType="VARCHAR"/>
+		<result column="address" property="address" jdbcType="VARCHAR"/>
+		<result column="phone_number" property="phoneNumber" jdbcType="VARCHAR"/>
+		<result column="email" property="email" jdbcType="VARCHAR"/>
+		<result column="company_type" property="companyType" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<resultMap type="wusw.entity.student.SendJobResultParam" id="sendJobResultMap">
+		<result column="id" property="id" jdbcType="INTEGER"/>
+		<result column="job_require" property="require" jdbcType="VARCHAR"/>
+		<result column="job" property="job" jdbcType="VARCHAR"/>
+		<result column="name" property="compantName" jdbcType="VARCHAR"/>
+		<result column="job_type" property="jobType" jdbcType="VARCHAR"/>
+		<result column="work_address" property="workAddress" jdbcType="VARCHAR"/>
+		<result column="student_id" property="studentId" jdbcType="INTEGER"/>
+		<result column="state" property="state" jdbcType="VARCHAR"/>
+	</resultMap>
+	
+	<select id="selectJobOffers" resultMap="offersResultMap" parameterType="wusw.entity.jobOffersParam">
+			select a.id,a.job_require,a.job,a.job_type,a.work_address,c.name
+			from joboffers a join company c
+			on a.compant_id=c.id
+			<include refid="whereSqlForJobOffers"/>
+			limit #{page.startPage,jdbcType=INTEGER},#{page.pageSize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectJobOffersTotal" resultType="int" parameterType="wusw.entity.jobOffersParam">
+		select count(a.id)
+		from joboffers a join company c
+		on a.compant_id=c.id
+		<include refid="whereSqlForJobOffers"/>
+	</select>
+	
+	<sql id="whereSqlForJobOffers">
+		where a.state=1
+		<if test="jobType !=null and jobType !='' ">
+			and a.job_type LIKE concat('%',#{jobType},'%')
+		</if>
+		<if test="workAddress !=null and workAddress !='' ">
+			and a.work_address LIKE concat('%',#{workAddress},'%')
+		</if>
+		<if test="job !=null and job !='' ">
+			and a.job LIKE concat('%',#{job},'%')
+		</if>
+		<if test="compantName !=null and compantName !='' ">
+			and c.name LIKE concat('%',#{compantName},'%')
+		</if>
+	</sql>
+	
+	<select id="selectCompany" resultMap="companyResultMap" parameterType="wusw.entity.student.CompanyQueryParam">
+		select * from company
+		<include refid="whereSqlForCompany"/>
+		limit #{page.startPage,jdbcType=INTEGER},#{page.pageSize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectCompanyTotal" resultType="int" parameterType="wusw.entity.student.CompanyQueryParam">
+		select count(id) from company
+		<include refid="whereSqlForCompany"/>
+	</select>
+	
+	<sql id="whereSqlForCompany">
+	  <where>
+		<if test="name !=null and name !='' ">
+			and name LIKE concat('%',#{name},'%')
+		</if>
+		<if test="address !=null and address !='' ">
+			and address LIKE concat('%',#{address},'%')
+		</if>
+		<if test="companyType !=null and companyType !='' ">
+			and company_type LIKE concat('%',#{companyType},'%')
+		</if>
+	  </where>
+	</sql>
+	
+	<select id="selectSendJob" resultMap="sendJobResultMap" parameterType="wusw.entity.student.SendJobQueryParam">
+			select a.id,a.job_require,a.job,a.job_type,a.work_address,c.name,d.state,d.student_id
+	        from joboffers a join company c on a.compant_id=c.id
+	        join student_to_joboffers d     on d.joboffers_id=a.id
+			<include refid="whereSqlForSendJob"/>
+			limit #{page.startPage,jdbcType=INTEGER},#{page.pageSize,jdbcType=INTEGER}
+	</select>
+	
+	<select id="selectSendJobTotal" resultType="int" parameterType="wusw.entity.student.SendJobQueryParam">
+			select count(a.id)
+	        from joboffers a join company c on a.compant_id=c.id
+	        join student_to_joboffers d     on d.joboffers_id=a.id
+			<include refid="whereSqlForSendJob"/>
+	</select>
+	
+	<sql id="whereSqlForSendJob">
+	    where d.student_id=#{studentId,jdbcType=INTEGER}
+		<if test="jobType !=null and jobType !='' ">
+			and a.job_type LIKE concat('%',#{jobType},'%')
+		</if>
+		<if test="workAddress !=null and workAddress !='' ">
+			and a.work_address LIKE concat('%',#{workAddress},'%')
+		</if>
+		<if test="job !=null and job !='' ">
+			and a.job LIKE concat('%',#{job},'%')
+		</if>
+		<if test="compantName !=null and compantName !='' ">
+			and c.name LIKE concat('%',#{compantName},'%')
+		</if>
+		<if test="state !=null and state !='' ">
+			and d.state = #{state,jdbcType=VARCHAR}
+		</if>
+	</sql>
+	
+	<insert id="insertSendJobOffers" parameterType="wusw.entity.student.SendJobOffers">
+		 insert into student_to_joboffers
+		(joboffers_id,student_id,state)
+		values
+		<foreach collection="ids" item="item" index="index"  separator=",">
+			(#{item,jdbcType=INTEGER},#{studentId,jdbcType=INTEGER},#{state,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+	
+	<select id="selectPersonAplication" parameterType="int" resultType="wusw.entity.student.PersonApplication">
+		select * from student 
+		where id=#{id,jdbcType=INTEGER}
+	</select>
+	
+	<update id="updatePersonAplication" parameterType="wusw.entity.student.PersonApplication">
+		update student
+		<set>
+			<if test="name !=null and name !='' ">
+			  name=#{name,jdbcType=VARCHAR},
+		    </if>
+		    <if test="gender !=null and gender !='' ">
+			  gender=#{gender,jdbcType=VARCHAR},
+		    </if>
+		    <if test="age != 0 ">
+			  age=#{age,jdbcType=INTEGER},
+		    </if>
+		    <if test="phone !=null and phone !='' ">
+			  phone=#{phone,jdbcType=VARCHAR},
+		    </if>
+		    <if test="profession !=null and profession !='' ">
+			  profession=#{profession,jdbcType=VARCHAR},
+		    </if>
+		    <if test="hobbies !=null and hobbies !='' ">
+			  hobbies=#{hobbies,jdbcType=VARCHAR},
+		    </if>
+		    <if test="home_address !=null and home_address !='' ">
+			  home_address=#{home_address,jdbcType=VARCHAR},
+		    </if>
+		    <if test="birthday !=null">
+			  birthday=#{birthday,jdbcType=TIMESTAMP},
+		    </if>
+		    <if test="class_id != 0 ">
+			  class_id=#{class_id,jdbcType=INTEGER},
+		    </if>
+		</set>
+		where id=#{id,jdbcType=INTEGER}
+	</update>
+</mapper>

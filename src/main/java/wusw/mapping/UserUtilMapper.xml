@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="wusw.dao.UserUtilMapper">
+	<select id="getUserCompetenceId" parameterType="string" resultType="int">
+		select id from competence
+		where name=#{identity,jdbcType=VARCHAR}
+	</select>
+	
+	<select id="getUserIdentity" parameterType="int" resultType="string">
+		select name from competence
+		where id=#{id,jdbcType=INTEGER}
+	</select>
+</mapper>
